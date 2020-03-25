@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/src/.ionide
+/tools/CsvToGpxConverter/.vs/CsvToGpxConverter
+/tools/CsvToGpxConverter/CsvToGpxConverter/.vscode
+/tools/CsvToGpxConverter/CsvToGpxConverter/Properties/launchSettings.json
