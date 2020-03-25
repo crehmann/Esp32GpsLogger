@@ -2,15 +2,12 @@
 #include <string>
 #include <TinyGPS++.h>
 #include <HardwareSerial.h>
-#include "DFRobot_IL3895_SPI.h"
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
 
 HardwareSerial SerialGPS(1);
-DFRobot_IL3895_SPI epaper;
 TinyGPSPlus gps;
-
 uint32_t nextSerialTaskTs = 0;
 bool sdCardInitialized = false;
 
@@ -92,16 +89,14 @@ void logGps()
           gps.time.hour(),
           gps.time.minute(),
           gps.time.second());
-  const char *lat = String(gps.location.lat(), 8).c_str();
-  const char *lng = String(gps.location.lng(), 8).c_str();
 
   std::stringstream logLine;
-  logLine << "\"" << timestamp << "\";"
-          << "\"" << lat << "\";"
-          << "\"" << lng << "\";"
-          << "\"" << gps.altitude.value() << "\";"
-          << "\"" << String(gps.hdop.value(), 2).c_str() << "\";"
-          << "\"" << gps.satellites.value() << "\"\r\n";
+  logLine << timestamp << ";"
+          << String(gps.location.lat(), 8).c_str() << ";"
+          << String(gps.location.lng(), 8).c_str() << ";"
+          << gps.altitude.meters() << ";"
+          << String(gps.hdop.hdop(), 2).c_str() << ";"
+          << gps.satellites.value() << "\r\n";
 
   appendFile(SD, "/gps.log", logLine.str().c_str());
   Serial.println(logLine.str().c_str());
@@ -113,10 +108,6 @@ void setup()
   sdCardInitialized = initializeSdCard();
   SerialGPS.begin(GPS_BAUD, SERIAL_8N1, GPS_RX, GPS_TX);
   Serial.println("Started");
-
-  epaper.begin(EPAPER_CS, Font_CS, EPAPER_DC, EPAPER_BUSY);
-  epaper.fillScreen(WHITE);
-  epaper.flush(FULL);
 }
 
 void loop()
