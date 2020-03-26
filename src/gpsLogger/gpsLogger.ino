@@ -90,11 +90,11 @@ void logGps()
           gps.time.second());
 
   std::stringstream logLine;
-  logLine << timestamp << ";"
-          << String(gps.location.lat(), 8).c_str() << ";"
-          << String(gps.location.lng(), 8).c_str() << ";"
-          << gps.altitude.meters() << ";"
-          << String(gps.hdop.hdop(), 2).c_str() << ";"
+  logLine << timestamp << ","
+          << String(gps.location.lat(), 8).c_str() << ","
+          << String(gps.location.lng(), 8).c_str() << ","
+          << gps.altitude.meters() << ","
+          << String(gps.hdop.hdop(), 2).c_str() << ","
           << gps.satellites.value() << "\r\n";
 
   appendFile(SD, "/gps.log", logLine.str().c_str());
