@@ -6,11 +6,6 @@
 #include "SD.h"
 #include "SPI.h"
 
-HardwareSerial SerialGPS(1);
-TinyGPSPlus gps;
-uint32_t nextSerialTaskTs = 0;
-bool sdCardInitialized = false;
-
 #define SERIAL_BAUD 115200
 
 #define SD_CARD_CS 25
@@ -19,12 +14,16 @@ bool sdCardInitialized = false;
 #define GPS_RX 17
 #define GPS_TX 16
 
-#define EPAPER_CS 26
-#define Font_CS 10
-#define EPAPER_DC 5
-#define EPAPER_BUSY 13
-
 #define TASK_SERIAL_RATE 10 * 1000
+
+#define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP  30       
+
+HardwareSerial SerialGPS(1);
+TinyGPSPlus gps;
+uint32_t nextSerialTaskTs = 0;
+bool sdCardInitialized = false;
+RTC_DATA_ATTR int bootCount = 0;
 
 bool initializeSdCard()
 {
@@ -106,8 +105,12 @@ void setup()
 {
   Serial.begin(SERIAL_BAUD);
   sdCardInitialized = initializeSdCard();
-  SerialGPS.begin(GPS_BAUD, SERIAL_8N1, GPS_RX, GPS_TX);
-  Serial.println("Started");
+  SerialGPS.begin(GPS_BAUD, SERIAL_8N1, GPS_RX, GPS_TX);  
+
+  
+  ++bootCount;
+  Serial.println("Boot number: " + String(bootCount));
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
 }
 
 void loop()
@@ -121,5 +124,12 @@ void loop()
   {
     nextSerialTaskTs = millis() + TASK_SERIAL_RATE;
     logGps();
+
+    if(gps.hdop.hdop() < 2){
+      Serial.println("Going to sleep now");
+      delay(1000);
+      Serial.flush(); 
+      esp_deep_sleep_start();
+    }
   }
 }
