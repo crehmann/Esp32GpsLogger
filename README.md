@@ -18,13 +18,12 @@ The Deep Sleep functionality of the ESP32 is used to improve the battery life. E
 ![screenshot](https://raw.githubusercontent.com/crehmann/Esp32GpsLogger/master/assets/breadboard.png)  
 
 ## Battery Life
-First test have shown a battery life of around 32 hours with the 3000mAh battery if logging the position every 10s (without Deep Sleep).
+First test have shown a battery life of around 92 hours with the 3000mAh battery.
 
 ## GPX Conversion
 A simple CSV file is used for logging the GPS coordinates. To use the logs with other programs or to visualize it better, it can be converted into the GPX format. The F# console application from the tools directory of this repository can be used for this.
 
 ## Todo
-* Measure battery life when using the Deep Sleep mode
 * Improve battery power by using the low power mode of the L76X GPS module
 * Implement a more soffisticated Deep Sleep algorithm do improve battery life even further.
 * ...
