@@ -5,6 +5,14 @@ open System.Xml
 open System.Text
 open System.IO
 open Argu
+open System.Xml
+
+[<Literal>] 
+let GpxXsd = "https://www.topografix.com/gpx/1/1/gpx.xsd"
+[<Literal>] 
+let GpxVersion = "1.1"
+[<Literal>] 
+let GpxNamespace = "http://www.topografix.com/GPX/1/1"
 
 type CliArguments = 
     | [<Mandatory>] InputFile of string
@@ -17,19 +25,20 @@ type CliArguments =
 
 type GpsLogs = CsvProvider< Schema="Timestamp (date), Latitude (decimal), Longitude (decimal), Altitude (decimal option), Hdop (decimal option), Satellites (string option)", HasHeaders=false >
 
-type Gpx = XmlProvider< Schema="https://www.topografix.com/gpx/1/1/gpx.xsd" >
+type Gpx = XmlProvider< Schema= GpxXsd>
 
-let XDeclaration version encoding standalone = 
-    XDeclaration(version, encoding, standalone)
-
-let XDocument xdecl content = 
-    XDocument(xdecl, 
-              content
-              |> Seq.map(fun v -> v :> obj)
-              |> Seq.toArray)
+let GpxDocument(trackpoints : seq<Gpx.Trkpt>) = 
+    let trackSegment = Gpx.Trkseg((trackpoints |> Seq.toArray), Option.None)
+    let track = 
+        Gpx.Trk
+            (Option.None, Option.None, Option.None, Option.None, Array.empty, 
+             Option.None, Option.None, Option.None, [|trackSegment|])
+    let gpx = XElement(XName.Get("gpx", GpxNamespace), track.XElement)
+    gpx.SetAttributeValue(XName.Get("version"), GpxVersion :> obj)
+    XDocument(XDeclaration("1.0", "UTF-8", "yes"), [|gpx :> obj|])
 
 let convertRowToWpt(row : GpsLogs.Row) = 
-    Gpx.Wpt
+    Gpx.Trkpt
         (row.Latitude, row.Longitude, row.Altitude, 
          Some(DateTimeOffset(row.Timestamp)), None, None, None, None, None, None, 
          Array.empty, None, None, None, row.Satellites, row.Hdop, None, None, 
@@ -39,7 +48,7 @@ let convertToGpx (inputFilePath : string) (outputFilePath : string) =
     let inputFileStream = File.OpenText inputFilePath
     let rows : seq<GpsLogs.Row> = (GpsLogs.Load inputFileStream).Rows
     let wpts = Seq.map convertRowToWpt rows
-    let doc = XDocument (XDeclaration "1.0" "UTF-8" "yes") wpts
+    let doc = GpxDocument wpts
     let output = File.OpenWrite(outputFilePath)
     use xtw = 
         XmlWriter.Create
